@@ -12,6 +12,8 @@
 #include "Componets/HealthComponent.h"
 #include "Components/TextRenderComponent.h"
 #include "GameFramework/Controller.h"
+#include "Components/CapsuleComponent.h"
+#include "Weapon/WeaponComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(BaseCharecterLog, All, All)
 
@@ -21,9 +23,11 @@ AShooterBaseCharacter::AShooterBaseCharacter(const FObjectInitializer& ObjInit) 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+
 	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArmComponent");
 	SpringArmComponent->SetupAttachment(GetRootComponent());
 	SpringArmComponent->bUsePawnControlRotation = true;
+	SpringArmComponent->SocketOffset = FVector(0.0f, 100.0f, 80.0f);
 	
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
 	CameraComponent->SetupAttachment(SpringArmComponent);
@@ -32,6 +36,10 @@ AShooterBaseCharacter::AShooterBaseCharacter(const FObjectInitializer& ObjInit) 
 
 	HealthTextComponent=CreateDefaultSubobject<UTextRenderComponent>("HealthTextComponent");
 	HealthTextComponent->SetupAttachment(GetRootComponent());
+	HealthTextComponent-> SetOwnerNoSee(true);
+
+	WeaponComponent = CreateDefaultSubobject<UWeaponComponent>("WeaponComponent");
+	
 }
 
 // Called when the game starts or when spawned
@@ -62,6 +70,7 @@ void AShooterBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	check(PlayerInputComponent);
+	check(WeaponComponent);
 	
 	PlayerInputComponent->BindAxis("MoveForward", this, &AShooterBaseCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterBaseCharacter::MoveRight);
@@ -70,6 +79,10 @@ void AShooterBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AShooterBaseCharacter::Jump);
 	PlayerInputComponent->BindAction("Run",IE_Pressed,this, &AShooterBaseCharacter::OnStartRunning );
 	PlayerInputComponent->BindAction("Run",	IE_Released  ,this, &AShooterBaseCharacter::OnStopRunning );
+	PlayerInputComponent->BindAction("Fire", IE_Pressed  ,WeaponComponent, &UWeaponComponent::StartFire );
+	PlayerInputComponent->BindAction("Fire", IE_Released  ,WeaponComponent, &UWeaponComponent::StopFire );
+	PlayerInputComponent->BindAction("NextWeapon", IE_Pressed  ,WeaponComponent, &UWeaponComponent::NextWeapon );
+	PlayerInputComponent->BindAction("Reload", IE_Pressed  ,WeaponComponent, &UWeaponComponent::Reload );
 }
 
 bool AShooterBaseCharacter::IsRunning() const
@@ -123,6 +136,8 @@ void AShooterBaseCharacter::OnDeath()
 	{
 		Controller->ChangeState(NAME_Spectating);
 	}
+	GetCapsuleComponent()->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
+	WeaponComponent->StopFire();
 }
 
 void AShooterBaseCharacter::OnHealthChanged(float Health)
@@ -131,7 +146,8 @@ void AShooterBaseCharacter::OnHealthChanged(float Health)
 }
 
 void AShooterBaseCharacter::OnGroundLanded(const FHitResult& Hit)
-{const auto Result = FMath::GetMappedRangeValueClamped(FVector2D(30.0f, 60.0f), FVector2D(200.0f, 500.0f), 45.0f);
+{
+	const auto Result = FMath::GetMappedRangeValueClamped(FVector2D(30.0f, 60.0f), FVector2D(200.0f, 500.0f), 45.0f);
 	UE_LOG(BaseCharecterLog, Display, TEXT("%.1f"), Result);
 	const auto FallVelocityZ = -GetVelocity().Z;
 	UE_LOG(BaseCharecterLog, Display, TEXT("On Landed: %f"), FallVelocityZ);
@@ -142,6 +158,8 @@ void AShooterBaseCharacter::OnGroundLanded(const FHitResult& Hit)
 	UE_LOG(BaseCharecterLog, Display, TEXT("FinalDamage: %f"), FinalDamage);
 	TakeDamage(FinalDamage, FDamageEvent{}, nullptr, nullptr);
 }
+
+
 
 
 

@@ -4,11 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "ShooterCoreTypes.h"
 #include "HealthComponent.generated.h"
 
-//Only in C++ can be used this event (all names of delegates starts from "F")
-DECLARE_MULTICAST_DELEGATE(FOnDeathSignature);
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnHealthChangedSignature, float);
+
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BaseWeapon.h"
 #include "HealthComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Components/TextRenderComponent.h"
@@ -13,6 +14,7 @@
 class UCameraComponent;
 class USpringArmComponent;
 class UHealthComponent;
+class UWeaponComponent;
 
 UCLASS()
 class SHOOTER_API AShooterBaseCharacter : public ACharacter
@@ -36,6 +38,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
 	UTextRenderComponent* HealthTextComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
+	UWeaponComponent* WeaponComponent;
+	
 	UPROPERTY(EditDefaultsOnly, Category="Animation")
 	UAnimMontage* DeathAnimMontage;
 
@@ -47,7 +52,9 @@ protected:
 	// Called when the game starts or when spawned
 
 	UPROPERTY(EditDefaultsOnly, Category="Damage")
-	float LifeSpanOnDeath = 5.0f;
+	float LifeSpanOnDeath = 3.0f;
+
+
 	virtual void BeginPlay() override;
 
 public:	
