@@ -9,6 +9,7 @@
 
 
 
+class UCameraShakeBase; 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SHOOTER_API UHealthComponent : public UActorComponent
@@ -30,6 +31,10 @@ public:
 	
 	float GetHealth() const {return Health;}
 
+	bool TryToAddHealth(float HealthAmmount);
+	
+	bool isHealthFull() const;
+	
 protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="Health", meta=(ClampMin = "1.0", ClampMax="1000"))
@@ -46,6 +51,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite,Category="Health", meta=(EditCondition = "AutoHeal",ClampMin = "0.0", ClampMax="100"))
 	float HealModifier = 1.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX");
+	TSubclassOf<UCameraShakeBase> CameraShake;
 	
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -59,4 +67,6 @@ private:
 
 	void HealUpdate();
 	void SetHealth(float NewHealth);
+
+	void PlayCameraShake();
 };

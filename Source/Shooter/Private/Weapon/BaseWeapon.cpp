@@ -7,6 +7,8 @@
 #include "DrawDebugHelpers.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/Controller.h"
+#include "NiagaraFunctionLibrary.h"
+#include "NiagaraComponent.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogBaseWeapon, All, All);
 
@@ -82,7 +84,7 @@ void ABaseWeapon::MakeHit(FHitResult& HitResult, const FVector& TraceStart, cons
 	
 	FCollisionQueryParams CollisionQueryParams;
 	CollisionQueryParams.AddIgnoredActor(GetOwner());
-
+	CollisionQueryParams.bReturnPhysicalMaterial = true;
 	GetWorld()->LineTraceSingleByChannel(HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionQueryParams);
 
 }
@@ -99,7 +101,7 @@ void ABaseWeapon::DecreaseAmmo()
 	if(IsClipEmtry() && !IsAmmoEmty())
 	{
 		StopFire();
-		OnclipEmty.Broadcast();
+		OnclipEmty.Broadcast(this);
 	}
 }
 
@@ -112,6 +114,48 @@ bool ABaseWeapon::IsAmmoEmty() const
 bool ABaseWeapon::IsClipEmtry() const
 {
 	return CurrentAmmo.Bullets ==0;
+}
+
+bool ABaseWeapon::IsAmmoFull() const
+{
+	return CurrentAmmo.CLips == DefaultAmmo.CLips &&
+			CurrentAmmo.Bullets == DefaultAmmo.Bullets;
+}
+bool ABaseWeapon::TryToAddAmmo(int32 ClipsAmmount)
+{
+	//if we have infinity ammo || ammo is full || clips adding <= 0
+	if(CurrentAmmo.Infinite || IsAmmoFull()|| ClipsAmmount<=0) return false;
+
+	// if ammo clips and bullets are empty adding all + reload event
+	if(IsAmmoEmty()) 
+	{
+		UE_LOG(LogBaseWeapon, Display, TEXT("IsAmmoEmty"));
+		CurrentAmmo.CLips = FMath::Clamp(CurrentAmmo.CLips + ClipsAmmount, 0, DefaultAmmo.CLips+1);
+		OnclipEmty.Broadcast(this);
+	}
+	// adding only clips
+	else if(CurrentAmmo.CLips < DefaultAmmo.CLips) 
+	{
+		const auto NextCLipsAmount = CurrentAmmo.CLips + ClipsAmmount;
+		if(DefaultAmmo.CLips - NextCLipsAmount >=0) 
+		{
+			CurrentAmmo.CLips = NextCLipsAmount;
+			UE_LOG(LogBaseWeapon, Display, TEXT("clips were added"));
+		}
+		else
+		{
+			CurrentAmmo.CLips = DefaultAmmo.CLips;
+			CurrentAmmo.Bullets = DefaultAmmo.Bullets;
+			UE_LOG(LogBaseWeapon, Display, TEXT("ammo is full now"));
+		}
+	}
+	// adding only bullets
+	else 
+	{
+		CurrentAmmo.Bullets = DefaultAmmo.Bullets;
+		UE_LOG(LogBaseWeapon, Display, TEXT("Bullets were added"));
+	}
+	return true;
 }
 
 void ABaseWeapon::ChangeClip()
@@ -151,6 +195,16 @@ void ABaseWeapon::GetMuzzleWorldLocationVR()
 	const FVector TraceEnd = TraceStart + ShootDirection * TraceMaxDistance;
 	DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::Red, false, 3.0f, 0, 3.0f);
 	
+}
+
+UNiagaraComponent* ABaseWeapon::SpawnMuzzleFX()
+{
+	return UNiagaraFunctionLibrary::SpawnSystemAttached(MuzzleFX,
+												WeaponMesh,
+												MuzzleSocketName,
+												FVector::ZeroVector,
+												FRotator::ZeroRotator,
+												EAttachLocation::SnapToTarget, true);
 }
 
 

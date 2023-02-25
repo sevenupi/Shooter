@@ -13,7 +13,9 @@ public class Shooter : ModuleRules
 			"Core", 
 			"CoreUObject", 
 			"Engine", 
-			"InputCore"
+			"InputCore",
+			"Niagara",
+			"PhysicsCore"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
@@ -25,7 +27,10 @@ public class Shooter : ModuleRules
 			"Shooter/Public/Development", 
 			"Shooter/Public/Weapon", 
 			"Shooter/Public/UI",
-			"Shooter/Public/Animations"
+			"Shooter/Public/Animations",
+			"Shooter/Public/Pickups",
+			"Shooter/Public/Weapon/Components",
+			"Shooter/Public/Weapon/AI"
 		});
 
 		// Uncomment if you are using Slate UI

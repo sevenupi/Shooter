@@ -10,7 +10,8 @@
 
 
 class USkeletalMeshComponent;
-
+class UNiagaraSystem;
+class UNiagaraComponent;
 
 
 UCLASS()
@@ -31,6 +32,8 @@ public:
 	
 	FWeaponUIData GetUIData() const	{return UIData;}
 	FAmmoData GetCurrentAmmoData() const {return CurrentAmmo;}
+
+	bool TryToAddAmmo(int32 ClipsAmmount);
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Components")
 	USkeletalMeshComponent* WeaponMesh;
@@ -46,6 +49,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="UI")
 	FWeaponUIData UIData;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="VFX")
+	UNiagaraSystem* MuzzleFX;
+	
 	
 	virtual void BeginPlay() override;
 	
@@ -60,9 +67,13 @@ protected:
 	void DecreaseAmmo();
 	bool IsAmmoEmty() const;
 	bool IsClipEmtry() const;
+	bool IsAmmoFull() const;
+
 	void LogAmmo();
 	
 	void GetMuzzleWorldLocationVR();
+
+	UNiagaraComponent* SpawnMuzzleFX();
 
 private:
 	FAmmoData CurrentAmmo;

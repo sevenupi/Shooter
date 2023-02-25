@@ -32,4 +32,5 @@ void ALauncherWeapon::MakeShot()
 		Projectile->FinishSpawning(SpawnTransform);
 	}
 	DecreaseAmmo();
+	SpawnMuzzleFX();
 }

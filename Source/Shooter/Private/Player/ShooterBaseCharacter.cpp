@@ -50,8 +50,9 @@ void AShooterBaseCharacter::BeginPlay()
 	check(HealthComponent);
 	check(HealthTextComponent);
 	check(GetCharacterMovement());
+	check(GetMesh());
 
-	OnHealthChanged(HealthComponent->GetHealth());
+	OnHealthChanged(HealthComponent->GetHealth(), 0.0f);
 	HealthComponent->OnDeath.AddUObject(this, &AShooterBaseCharacter::OnDeath);
 	HealthComponent -> OnHealthChanged.AddUObject(this, &AShooterBaseCharacter::OnHealthChanged);
 
@@ -128,7 +129,7 @@ void AShooterBaseCharacter::OnDeath()
 {
 	UE_LOG(BaseCharecterLog, Display, TEXT("Player %s is dead"), *GetName());
 	
-	PlayAnimMontage(DeathAnimMontage);
+	//PlayAnimMontage(DeathAnimMontage);
 	GetCharacterMovement()->DisableMovement();
 	SetLifeSpan(LifeSpanOnDeath);
 
@@ -138,9 +139,12 @@ void AShooterBaseCharacter::OnDeath()
 	}
 	GetCapsuleComponent()->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
 	WeaponComponent->StopFire();
+
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetMesh()->SetSimulatePhysics(true);
 }
 
-void AShooterBaseCharacter::OnHealthChanged(float Health)
+void AShooterBaseCharacter::OnHealthChanged(float Health, float HealthDelta)
 {
 	HealthTextComponent->SetText(FText::FromString(FString::Printf(TEXT("%.0f"),Health)));
 }

@@ -14,6 +14,7 @@ class SHOOTER_API UPlayerHUDWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
+public:
 	UFUNCTION(BlueprintCallable, Category="UI")
 	float Get_HealthPercent()const;
 
@@ -29,4 +30,11 @@ class SHOOTER_API UPlayerHUDWidget : public UUserWidget
 	UFUNCTION(BlueprintCallable, Category="UI")
 	bool IsPlayerSpectator() const;
 	
+	UFUNCTION(BlueprintImplementableEvent, Category="UI") // Создает ивент в блюпринт на основе этой функции
+	void OnTakeDamage();
+	
+	virtual bool Initialize() override;
+
+private:
+	void OnHealthChanged(float Health, float HealthDelta);
 };
