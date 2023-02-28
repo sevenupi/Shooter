@@ -29,15 +29,23 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Pickup")
 	float RespwanTime = 5.0f;
 	
+	
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
+	virtual void NotifyActorEndOverlap(AActor* OtherActor) override;
 
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
-
+	bool CouldBeTaken() const;
+	
 private:
+	UPROPERTY()
+	TArray<APawn*> OverlappingPawns;
+
+
+	FTimerHandle RespawntTimerHandle;
 	virtual bool GivePickUpTo(APawn* PlayerPawn);
 	void PickUpWasTaken();
 	void Respawn();

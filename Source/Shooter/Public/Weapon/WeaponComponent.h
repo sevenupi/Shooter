@@ -21,15 +21,16 @@ public:
 	// Sets default values for this component's properties
 	UWeaponComponent();
 
-	void StartFire();
+	virtual void StartFire();
 	void StopFire();
-	void NextWeapon();
+	virtual void NextWeapon();
 	void Reload();
 
 	bool GetWeaponUIData(FWeaponUIData& UIData) const; 
 	bool GetWeaponUIAmmoData(FAmmoData& UIAmmoData) const; 
 
 	bool TryToAddAmmo(TSubclassOf<ABaseWeapon> WeaponType, int32 ClipsAmmount);
+	bool NeedAmmo(TSubclassOf<ABaseWeapon> WeaponType);
 
 protected:
 
@@ -44,36 +45,40 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category="Animation")
 	UAnimMontage* EquipAnimMontaga;
-	
-	// Called when the game starts
-	virtual void BeginPlay() override;
-	
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-private:
+
 	UPROPERTY()
 	ABaseWeapon* CurrentWeapon = nullptr;
 
 	UPROPERTY()
 	TArray<ABaseWeapon*> Weapons;
+	
+	// Called when the game starts
+	virtual void BeginPlay() override;
+	
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
+	bool CanFire() const;
+	bool CanEquip() const;
+	void EquipWeapon(int32 WeaponIndex);
+	int32 CurrentWeaponIndex = 0;
+private:
 	UPROPERTY()
 	UAnimMontage* CurrentReloadAnimMontage = nullptr;
 
-	int32 CurrentWeaponIndex = 0;
+
 	bool EquipAnimInProgress = false;
 	bool ReloadAnimInProgress = false;
 	
 	void SpawnWeapons();
 	void AtachWeaponToSocket(ABaseWeapon* Weapon, USceneComponent* SceneComponent, const FName& ScoketName);
-	void EquipWeapon(int32 WeaponIndex);
+
 
 	void PlayAnimMontage(UAnimMontage* Animation);
 	void InitAnimation();
 	void OnEquipFinished(USkeletalMeshComponent* MeshComp);
 	void OnReloadFinished(USkeletalMeshComponent* MeshComp);
 
-	bool CanFire() const;
-	bool CanEquip() const;
+
 	bool CanReload() const;
 
 	void OnEmptyClip(ABaseWeapon* AmmoEmtyWeaponThis);

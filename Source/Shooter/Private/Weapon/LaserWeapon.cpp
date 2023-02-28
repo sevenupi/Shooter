@@ -84,7 +84,7 @@ void ALaserWeapon::MakeDamage(const FHitResult& HitResult)
 	const auto DamageActor = HitResult.GetActor();
 	if(!DamageActor) return;
 
-	DamageActor->TakeDamage(DamageAmount, FDamageEvent(), GetPlayerController(), this);
+//	DamageActor->TakeDamage(DamageAmount, FDamageEvent(), GetPlayerController(), this);
 }
 
 

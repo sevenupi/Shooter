@@ -43,21 +43,25 @@ void ABaseWeapon::BeginPlay()
 }
 
 
-
-APlayerController* ABaseWeapon::GetPlayerController() const
-{
-	const auto Player = Cast<ACharacter>(GetOwner());
-	if(!Player) return nullptr;
-
-	return Player->GetController<APlayerController>();
-}
-
 bool ABaseWeapon:: GetPlayerViewPoint(FVector& ViewLocation, FRotator& ViewRotation) const
 {
-	const auto Controller = GetPlayerController();
-	if(!Controller) return false;
+	const auto PlayerCharacter  = Cast<ACharacter>(GetOwner());
+	if(!PlayerCharacter) return false;
+
+	if(PlayerCharacter->IsPlayerControlled())
+	{
+		const auto Controller = PlayerCharacter->GetController<APlayerController>();
+		if(!Controller) return false;
 	
-	Controller->GetPlayerViewPoint(ViewLocation, ViewRotation);
+		Controller->GetPlayerViewPoint(ViewLocation, ViewRotation);
+	}
+	else
+	{
+		ViewLocation = GetMuzzleWorldLocation();
+		ViewRotation = WeaponMesh->GetSocketRotation(MuzzleSocketName);
+	}
+	
+
 	return true;
 }
 
@@ -171,7 +175,7 @@ void ABaseWeapon::ChangeClip()
 		CurrentAmmo.CLips --;
 	}
 	CurrentAmmo.Bullets = DefaultAmmo.Bullets;
-	UE_LOG(LogBaseWeapon, Display, TEXT("--------------RELOADING CLIP-------------"));
+	//UE_LOG(LogBaseWeapon, Display, TEXT("--------------RELOADING CLIP-------------"));
 }
 
 bool ABaseWeapon::CanReload() const

@@ -41,8 +41,21 @@ void ABasePickup::NotifyActorBeginOverlap(AActor* OtherActor)
 		//UE_LOG(LogBasePickup, Display, TEXT("Pickup was picked"));
 		PickUpWasTaken();
 	}
+	else if(Pawn)
+	{
+		OverlappingPawns.Add(Pawn);
+	}
 
 
+}
+
+void ABasePickup::NotifyActorEndOverlap(AActor* OtherActor)
+{
+	Super::NotifyActorEndOverlap(OtherActor);
+
+	const auto Pawn = Cast<APawn>(OtherActor);
+	OverlappingPawns.Remove(Pawn);
+	
 }
 
 // Called every frame
@@ -51,6 +64,15 @@ void ABasePickup::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	AddActorLocalRotation(FRotator(0.0f, RotationYaw * DeltaTime, 0.0f));
+
+	for (const auto OverlapPawn : OverlappingPawns)
+	{
+		if (GivePickUpTo(OverlapPawn))
+		{
+			PickUpWasTaken();
+			break;
+		}
+	}
 }
 
 bool ABasePickup::GivePickUpTo(APawn* PlayerPawn)	
@@ -66,7 +88,7 @@ void ABasePickup::PickUpWasTaken()
 	{
 		GetRootComponent()->SetVisibility(false, true);
 	}
-	FTimerHandle RespawntTimerHandle;
+
 	GetWorldTimerManager().SetTimer(RespawntTimerHandle, this, &ABasePickup::Respawn, RespwanTime);
 }
 
@@ -84,6 +106,11 @@ void ABasePickup::GenerateRotationYaw()
 {
 	const auto Direction = FMath::RandBool() ? 1 : -1;
 	RotationYaw = FMath::RandRange(50.0f,60.0f) * Direction;
+}
+
+bool ABasePickup::CouldBeTaken() const
+{
+	return !GetWorldTimerManager().IsTimerActive(RespawntTimerHandle);
 }
 
 

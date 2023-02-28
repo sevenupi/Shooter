@@ -10,6 +10,7 @@
 #include "Engine/World.h"
 #include "TimerManager.h"
 #include "Camera/CameraShakeBase.h"
+#include  "ShooterGameModeBase.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogHealthComponent, All, All)
 // Sets default values for this component's properties
@@ -47,6 +48,7 @@ void UHealthComponent::OnTakeAnyDamageHandle(AActor* DamagedActor, float Damage,
 	GetWorld()->GetTimerManager().ClearTimer(HealTimerHandle);
 	if (IsDead())
 	{
+		Killed(InstigatedBy);
 		OnDeath.Broadcast();
 	}
 	else if(AutoHeal)
@@ -105,6 +107,18 @@ void UHealthComponent::PlayCameraShake()
 
 	Controller ->PlayerCameraManager->StartCameraShake(CameraShake);
 
+	
+}
+
+void UHealthComponent::Killed(AController* KillerController)
+{
+	const auto GameMode =Cast<AShooterGameModeBase>( GetWorld()->GetAuthGameMode());
+	if(!GameMode) return;
+
+	const auto Player = Cast<APawn>(GetOwner());
+	const auto VictimController = Player ? Player->Controller : nullptr;
+
+	GameMode->Killed(KillerController, VictimController);
 	
 }
 

@@ -54,9 +54,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category="Damage")
 	float LifeSpanOnDeath = 3.0f;
 
-
+	UPROPERTY(EditDefaultsOnly, Category="Material")
+	FName MaterialColorName = "Paint Color";
+	
 	virtual void BeginPlay() override;
-
+	virtual void OnDeath();
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -66,8 +68,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category="Movement")
 	bool IsRunning() const;
+	
 	UFUNCTION(BlueprintCallable, Category="Movement")
 	float GetMovementDiraction() const;
+
+	void SetPlayerColor(const FLinearColor& Color);
 private:
 	bool WantsToRun = false;
 	bool IsMovingForward = false;
@@ -76,7 +81,7 @@ private:
 	void OnStartRunning();
 	void OnStopRunning();
 
-	void OnDeath();
+
 	void OnHealthChanged(float Health, float HealthDelta);
 
 	UFUNCTION()
