@@ -3,16 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "BaseWeapon.h"
-#include "HealthComponent.h"
-#include "Camera/CameraComponent.h"
-#include "Components/TextRenderComponent.h"
 #include "GameFramework/Character.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "ShooterBaseCharacter.generated.h"
 
-class UCameraComponent;
-class USpringArmComponent;
+
 class UHealthComponent;
 class UWeaponComponent;
 
@@ -26,17 +20,11 @@ public:
 	AShooterBaseCharacter(const FObjectInitializer& ObjInit);
 
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
-	USpringArmComponent* SpringArmComponent;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
-	UCameraComponent* CameraComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
 	UHealthComponent* HealthComponent;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
-	UTextRenderComponent* HealthTextComponent;
+	
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
 	UWeaponComponent* WeaponComponent;
@@ -63,24 +51,15 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	UFUNCTION(BlueprintCallable, Category="Movement")
-	bool IsRunning() const;
+	virtual bool IsRunning() const;
 	
 	UFUNCTION(BlueprintCallable, Category="Movement")
 	float GetMovementDiraction() const;
 
 	void SetPlayerColor(const FLinearColor& Color);
 private:
-	bool WantsToRun = false;
-	bool IsMovingForward = false;
-	void MoveForward(float Amount);
-	void MoveRight(float Amount);
-	void OnStartRunning();
-	void OnStopRunning();
-
 
 	void OnHealthChanged(float Health, float HealthDelta);
 

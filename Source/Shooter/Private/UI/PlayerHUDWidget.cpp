@@ -43,11 +43,15 @@ bool UPlayerHUDWidget::IsPlayerSpectator() const
 
 bool UPlayerHUDWidget::Initialize()
 {
-	const auto HealthComponent = UUtils::GetShooterPlayerComponent<UHealthComponent>(GetOwningPlayerPawn());
-	if(HealthComponent)
+
+	if(GetOwningPlayer())
 	{
-		HealthComponent->OnHealthChanged.AddUObject(this, &UPlayerHUDWidget::OnHealthChanged);
+		//получаю сылку на делигат нью паун и бинд функции
+		GetOwningPlayer()->GetOnNewPawnNotifier().AddUObject(this, &UPlayerHUDWidget::OnNewPawn);
+
+		OnNewPawn(GetOwningPlayerPawn());
 	}
+	
 	return Super::Initialize();
 }
 
@@ -58,6 +62,15 @@ void UPlayerHUDWidget::OnHealthChanged(float Health, float HealthDelta)
 		OnTakeDamage();
 	}
 
+}
+
+void UPlayerHUDWidget::OnNewPawn(APawn* NewPawn)
+{
+	const auto HealthComponent = UUtils::GetShooterPlayerComponent<UHealthComponent>(NewPawn);
+	if(HealthComponent /*&& !HealthComponent->OnHealthChanged.IsBoundToObject(this)*/)
+	{
+		HealthComponent->OnHealthChanged.AddUObject(this, &UPlayerHUDWidget::OnHealthChanged);
+	}
 }
 
 

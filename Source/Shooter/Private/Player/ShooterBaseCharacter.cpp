@@ -2,12 +2,6 @@
 
 
 #include "ShooterBaseCharacter.h"
-
-#include <string>
-
-#include "Camera/CameraComponent.h"
-#include "Components/InputComponent.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "Componets/SCharacterMovementComponent.h"
 #include "Componets/HealthComponent.h"
 #include "Components/TextRenderComponent.h"
@@ -23,21 +17,7 @@ AShooterBaseCharacter::AShooterBaseCharacter(const FObjectInitializer& ObjInit) 
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-
-	SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArmComponent");
-	SpringArmComponent->SetupAttachment(GetRootComponent());
-	SpringArmComponent->bUsePawnControlRotation = true;
-	SpringArmComponent->SocketOffset = FVector(0.0f, 100.0f, 80.0f);
-	
-	CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
-	CameraComponent->SetupAttachment(SpringArmComponent);
-
 	HealthComponent = CreateDefaultSubobject<UHealthComponent>("HealthComponent");
-
-	HealthTextComponent=CreateDefaultSubobject<UTextRenderComponent>("HealthTextComponent");
-	HealthTextComponent->SetupAttachment(GetRootComponent());
-	HealthTextComponent-> SetOwnerNoSee(true);
-
 	WeaponComponent = CreateDefaultSubobject<UWeaponComponent>("WeaponComponent");
 	
 }
@@ -48,7 +28,6 @@ void AShooterBaseCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	check(HealthComponent);
-	check(HealthTextComponent);
 	check(GetCharacterMovement());
 	check(GetMesh());
 
@@ -59,36 +38,20 @@ void AShooterBaseCharacter::BeginPlay()
 	LandedDelegate.AddDynamic(this, &AShooterBaseCharacter::OnGroundLanded);
 }
 
+void AShooterBaseCharacter::OnHealthChanged(float Health, float HealthDelta)
+{
+	
+}
+
 // Called every frame
 void AShooterBaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
-// Called to bind functionality to input
-void AShooterBaseCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	check(PlayerInputComponent);
-	check(WeaponComponent);
-	
-	PlayerInputComponent->BindAxis("MoveForward", this, &AShooterBaseCharacter::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterBaseCharacter::MoveRight);
-	PlayerInputComponent->BindAxis("LookUp", this, &AShooterBaseCharacter::AddControllerPitchInput);
-	PlayerInputComponent->BindAxis("TurnArround", this, &AShooterBaseCharacter::AddControllerYawInput);
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AShooterBaseCharacter::Jump);
-	PlayerInputComponent->BindAction("Run",IE_Pressed,this, &AShooterBaseCharacter::OnStartRunning );
-	PlayerInputComponent->BindAction("Run",	IE_Released  ,this, &AShooterBaseCharacter::OnStopRunning );
-	PlayerInputComponent->BindAction("Fire", IE_Pressed  ,WeaponComponent, &UWeaponComponent::StartFire );
-	PlayerInputComponent->BindAction("Fire", IE_Released  ,WeaponComponent, &UWeaponComponent::StopFire );
-	PlayerInputComponent->BindAction("NextWeapon", IE_Pressed  ,WeaponComponent, &UWeaponComponent::NextWeapon );
-	PlayerInputComponent->BindAction("Reload", IE_Pressed  ,WeaponComponent, &UWeaponComponent::Reload );
-}
-
 bool AShooterBaseCharacter::IsRunning() const
 {
-	return WantsToRun && IsMovingForward && !GetVelocity().IsZero();
+	return false;
 }
 
 float AShooterBaseCharacter::GetMovementDiraction() const
@@ -102,37 +65,6 @@ float AShooterBaseCharacter::GetMovementDiraction() const
 	return CrossProduct.IsZero() ? Degrees : Degrees * FMath::Sign(CrossProduct.Z);
 }
 
-void AShooterBaseCharacter::SetPlayerColor(const FLinearColor& Color)
-{
-	const auto MaterialInst = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
-	if(!MaterialInst) return;
-
-	MaterialInst->SetVectorParameterValue(MaterialColorName, Color);
-}
-
-void AShooterBaseCharacter::MoveForward(float Amount)
-{
-	IsMovingForward = Amount>0.0f;
-	if(Amount ==0.0f) return;
-	AddMovementInput(GetActorForwardVector(), Amount);
-}
-
-void AShooterBaseCharacter::MoveRight(float Amount)
-{
-	if(Amount ==0.0f) return;
-	AddMovementInput(GetActorRightVector(), Amount);
-}
-
-void AShooterBaseCharacter::OnStartRunning()
-{
-	WantsToRun = true;
-}
-
-void AShooterBaseCharacter::OnStopRunning()
-{
-	WantsToRun = false;
-}
-
 void AShooterBaseCharacter::OnDeath()
 {
 	UE_LOG(BaseCharecterLog, Display, TEXT("Player %s is dead"), *GetName());
@@ -141,20 +73,11 @@ void AShooterBaseCharacter::OnDeath()
 	GetCharacterMovement()->DisableMovement();
 	SetLifeSpan(LifeSpanOnDeath);
 
-	if(Controller)
-	{
-		Controller->ChangeState(NAME_Spectating);
-	}
 	GetCapsuleComponent()->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
 	WeaponComponent->StopFire();
 
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetMesh()->SetSimulatePhysics(true);
-}
-
-void AShooterBaseCharacter::OnHealthChanged(float Health, float HealthDelta)
-{
-	HealthTextComponent->SetText(FText::FromString(FString::Printf(TEXT("%.0f"),Health)));
 }
 
 void AShooterBaseCharacter::OnGroundLanded(const FHitResult& Hit)
@@ -170,6 +93,22 @@ void AShooterBaseCharacter::OnGroundLanded(const FHitResult& Hit)
 	UE_LOG(BaseCharecterLog, Display, TEXT("FinalDamage: %f"), FinalDamage);
 	TakeDamage(FinalDamage, FDamageEvent{}, nullptr, nullptr);
 }
+
+void AShooterBaseCharacter::SetPlayerColor(const FLinearColor& Color)
+{
+	const auto MaterialInst = GetMesh()->CreateAndSetMaterialInstanceDynamic(0);
+	if(!MaterialInst) return;
+
+	MaterialInst->SetVectorParameterValue(MaterialColorName, Color);
+}
+
+
+
+
+
+
+
+
 
 
 
