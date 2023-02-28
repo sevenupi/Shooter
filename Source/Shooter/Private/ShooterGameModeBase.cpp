@@ -3,6 +3,8 @@
 
 #include "ShooterGameModeBase.h"
 
+#include <string>
+
 #include "ChangeWeaponService.h"
 #include "GameFramework/HUD.h"
 #include "Player/ShooterBaseCharacter.h"
@@ -14,6 +16,9 @@
 #include "Componets/RespawnComponent.h"
 #include "EngineUtils.h"
 
+
+#include "Containers/UnrealString.h"
+#include "Engine/PlayerStartPIE.h"
 DEFINE_LOG_CATEGORY_STATIC(LogGameModeBase, All, All);
 
 constexpr static int32 MinRoundTimeForRespawn = 10; //минимальное время раунда для респауна
@@ -45,6 +50,7 @@ UClass* AShooterGameModeBase::GetDefaultPawnClassForController_Implementation(AC
 	}
 	return Super::GetDefaultPawnClassForController_Implementation(InController);
 }
+
 
 void AShooterGameModeBase::Killed(AController* KillerController, AController* VictimController)
 {

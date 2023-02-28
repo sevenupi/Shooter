@@ -21,6 +21,7 @@ public:
 
 	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 
+	
 	void Killed(AController* KillerController, AController* VictimController);
 
 	FGameData GetGameData() const { return GameData;}
