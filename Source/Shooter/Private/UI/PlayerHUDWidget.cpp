@@ -41,9 +41,11 @@ bool UPlayerHUDWidget::IsPlayerSpectator() const
 	return Controller && Controller->GetStateName() == NAME_Spectating;
 }
 
-bool UPlayerHUDWidget::Initialize()
+void UPlayerHUDWidget::NativeOnInitialized()
 {
-
+	
+	Super::NativeOnInitialized();
+	
 	if(GetOwningPlayer())
 	{
 		//получаю сылку на делигат нью паун и бинд функции
@@ -51,8 +53,7 @@ bool UPlayerHUDWidget::Initialize()
 
 		OnNewPawn(GetOwningPlayerPawn());
 	}
-	
-	return Super::Initialize();
+
 }
 
 void UPlayerHUDWidget::OnHealthChanged(float Health, float HealthDelta)

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ShooterCoreTypes.h"
 #include "GameFramework/PlayerController.h"
 #include "ShooterPlayerController.generated.h"
 
@@ -18,4 +19,12 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category="Components")
 	URespawnComponent* RespawnComponent;
+
+	virtual void BeginPlay() override;
+	virtual void OnPossess(APawn* InPawn) override;
+	virtual void SetupInputComponent() override;
+
+private:
+	void OnPauseGama();
+	void OnMatchStateChange(EMatchState State);
 };

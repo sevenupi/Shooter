@@ -33,7 +33,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category="UI") // Создает ивент в блюпринт на основе этой функции
 	void OnTakeDamage();
 	
-	virtual bool Initialize() override;
+	virtual void NativeOnInitialized() override;
 
 private:
 	void OnHealthChanged(float Health, float HealthDelta);

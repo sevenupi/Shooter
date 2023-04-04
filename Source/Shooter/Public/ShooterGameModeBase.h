@@ -17,10 +17,14 @@ class SHOOTER_API AShooterGameModeBase : public AGameModeBase
 public:
 	AShooterGameModeBase();
 
+
+	FOnMatchStateChangeSignature OnMatchStateChange;
 	virtual void StartPlay() override;
 
+	/** returns default pawn class for given controller */
 	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
-
+	/** select best spawn point for player */
+	//virtual AActor* ChoosePlayerStart_Implementation(AController* Player) override;
 	
 	void Killed(AController* KillerController, AController* VictimController);
 
@@ -29,6 +33,9 @@ public:
 	int32 GetRoundSecondsRemaining() const { return RoundCountDown;}
 
 	void RespawnRequest(AController* Controller);
+
+	virtual bool SetPause(APlayerController* PC, FCanUnpause CanUnpauseDelegate) override;
+	virtual bool ClearPause() override;
 	
 protected:
 	UPROPERTY(EditDefaultsOnly, Category="Game")
@@ -41,6 +48,8 @@ protected:
 	FGameData GameData;
 
 private:
+	EMatchState MatchState = EMatchState::WaitingToStart;
+	
 	int32 CurrentRound=1;
 	int32 RoundCountDown =0;
 	FTimerHandle GameRoundTimerHandle;
@@ -61,5 +70,6 @@ private:
 
 	void StartRespawn(AController* Controller);
 	
-	void GameOver(); 
+	void GameOver();
+	void SetMatchState(EMatchState State);
 };

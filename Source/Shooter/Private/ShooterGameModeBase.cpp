@@ -40,6 +40,10 @@ void AShooterGameModeBase::StartPlay()
 	
 	CurrentRound = 1;
 	StartRound();
+
+	SetMatchState(EMatchState::InProgress);
+
+
 }
 
 UClass* AShooterGameModeBase::GetDefaultPawnClassForController_Implementation(AController* InController)
@@ -50,8 +54,109 @@ UClass* AShooterGameModeBase::GetDefaultPawnClassForController_Implementation(AC
 	}
 	return Super::GetDefaultPawnClassForController_Implementation(InController);
 }
+/*
+AActor* AShooterGameModeBase::ChoosePlayerStart_Implementation(AController* Player)
+{
+	TArray<APlayerStart*> PreferredSpawns;
+	TArray<APlayerStart*> FallbackSpawns;
 
+	APlayerStart* BestStart = nullptr;
+	for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+	{
+		APlayerStart* TestSpawn = *It;
+		if (TestSpawn->IsA<APlayerStartPIE>())
+		{
+			// Always prefer the first "Play from Here" PlayerStart, if we find one while in PIE mode
+			BestStart = TestSpawn;
+			break;
+		}
+		else
+		{
+			if (IsSpawnpointAllowed(TestSpawn, Player))
+			{
+				if (IsSpawnpointPreferred(TestSpawn, Player))
+				{
+					PreferredSpawns.Add(TestSpawn);
+				}
+				else
+				{
+					FallbackSpawns.Add(TestSpawn);
+				}
+			}
+		}
+	}
+	
+	if (BestStart == NULL)
+	{
+		if (PreferredSpawns.Num() > 0)
+		{
+			BestStart = PreferredSpawns[FMath::RandHelper(PreferredSpawns.Num())];
+		}
+		else if (FallbackSpawns.Num() > 0)
+		{
+			BestStart = FallbackSpawns[FMath::RandHelper(FallbackSpawns.Num())];
+		}
+	}
 
+	return BestStart ? BestStart : Super::ChoosePlayerStart_Implementation(Player);
+}
+bool AShooterGameModeBase::IsSpawnpointAllowed(APlayerStart* SpawnPoint, AController* Player) const
+{
+	AShooterTeamStart* ShooterSpawnPoint = Cast<AShooterTeamStart>(SpawnPoint);
+	if (ShooterSpawnPoint)
+	{
+		AShooterAIController* AIController = Cast<AShooterAIController>(Player);
+		if (ShooterSpawnPoint->bNotForBots && AIController)
+		{
+			return false;
+		}
+
+		if (ShooterSpawnPoint->bNotForPlayers && AIController == NULL)
+		{
+			return false;
+		}
+		return true;
+	}
+
+	return false;
+}
+
+bool AShooterGameModeBase::IsSpawnpointPreferred(APlayerStart* SpawnPoint, AController* Player) const
+{
+	ACharacter* MyPawn = Cast<ACharacter>((*DefaultPawnClass)->GetDefaultObject<ACharacter>());	
+	AShooterAIController* AIController = Cast<AShooterAIController>(Player);
+	if( AIController != nullptr )
+	{
+		MyPawn = Cast<ACharacter>(BotPawnClass->GetDefaultObject<ACharacter>());
+	}
+	
+	if (MyPawn)
+	{
+		const FVector SpawnLocation = SpawnPoint->GetActorLocation();
+		for (ACharacter* OtherPawn : TActorRange<ACharacter>(GetWorld()))
+		{
+			if (OtherPawn != MyPawn)
+			{
+				const float CombinedHeight = (MyPawn->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() + OtherPawn->GetCapsuleComponent()->GetScaledCapsuleHalfHeight()) * 2.0f;
+				const float CombinedRadius = MyPawn->GetCapsuleComponent()->GetScaledCapsuleRadius() + OtherPawn->GetCapsuleComponent()->GetScaledCapsuleRadius();
+				const FVector OtherLocation = OtherPawn->GetActorLocation();
+
+				// check if player start overlaps this pawn
+				if (FMath::Abs(SpawnLocation.Z - OtherLocation.Z) < CombinedHeight && (SpawnLocation - OtherLocation).Size2D() < CombinedRadius)
+				{
+					return false;
+				}
+			}
+		}
+	}
+	else
+	{
+		return false;
+	}
+	
+	return true;
+}
+*/
 void AShooterGameModeBase::Killed(AController* KillerController, AController* VictimController)
 {
 	const auto KillerPlayerState = KillerController ? Cast<AShooterPlayerState>(KillerController->PlayerState) : nullptr;
@@ -73,6 +178,28 @@ void AShooterGameModeBase::Killed(AController* KillerController, AController* Vi
 void AShooterGameModeBase::RespawnRequest(AController* Controller)
 {
 	ResetOnePlayer(Controller);
+}
+
+bool AShooterGameModeBase::SetPause(APlayerController* PC, FCanUnpause CanUnpauseDelegate)
+{
+	const auto PauseSet = Super::SetPause(PC, CanUnpauseDelegate);
+
+	if (PauseSet)
+	{
+		SetMatchState(EMatchState::Pause);
+	}
+	return PauseSet;
+}
+
+bool AShooterGameModeBase::ClearPause()
+{
+	const auto PauseClear = Super::ClearPause();
+
+	if(PauseClear)
+	{
+		SetMatchState(EMatchState::InProgress);
+	}
+	return PauseClear;
 }
 
 void AShooterGameModeBase::SpawnBots()
@@ -152,6 +279,7 @@ void AShooterGameModeBase::CreateTeamsInfo()
 
 		PlayerState->SetTeamID(TeamID);
 		PlayerState->SetTeamColor(DetermineColorByTeamID(TeamID));
+		PlayerState->SetPlayerName(Controller->IsPlayerController() ? "Player" : "Bot");
 		SetPlayerColor(Controller);
 		TeamID = TeamID == 1 ? 2 : 1;
 
@@ -221,4 +349,14 @@ void AShooterGameModeBase::GameOver()
 			Pawn->DisableInput(nullptr);
 		}
 	}
+
+	SetMatchState(EMatchState::GameOver);
+}
+
+void AShooterGameModeBase::SetMatchState(EMatchState State)
+{
+	if(MatchState == State) return;
+
+	MatchState = State;
+	OnMatchStateChange.Broadcast(MatchState);
 }
